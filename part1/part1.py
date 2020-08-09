@@ -1,8 +1,9 @@
 import json
+from pprint import pprint
 from datetime import datetime
 
 import json
-with open("/Users/rachaeldagge/Desktop/python-project-starter/part1/data/forecast_5days_a.json") as json_file: 
+with open("./data/forecast_5days_a.json") as json_file: 
     json_data = json.load(json_file)
 
 
@@ -51,34 +52,7 @@ def calculate_mean(total, num_items):
     Returns:
         An integer representing the mean of the numbers.
     """
-    return total, num_items
-
-
-def process_weather(forecast_file): #these are a function
-    """Converts raw weather data into meaningful text.
-
-    Args:
-        forecast_file: A string representing the file path to a file
-            containing raw weather data.
-    Returns:
-        A string containing the processed and formatted weather data.
-    """
-    #return Minimum Temperature (mintemp) 
-    pass
-
-if __name__ == "__main__":
-    print(process_weather("data/forecast_5days_a.json"))
-
-#This is what I last worked on Thursday night***
-
-lowtemp = [8.3, 10.6, 14.4, 14.4, 10.6]
-lowesttemp = min(lowtemp)
-print(f"The lowest temperature will be {format_temperature(lowesttemp)} and will occur on \n")
-   
-hightemp = [17.8, 19.4, 22.2, 22.2, 18.9]
-highesttemp = max(hightemp)
-print(f"The highest temperature will be {format_temperature(highesttemp)} and will occur on \n")
-
+    return round(total / num_items, ndigits=1)
 
 #Trying to calculate mean***#
 #calculate_mean(63.8, 5)
@@ -98,58 +72,95 @@ print(f"The highest temperature will be {format_temperature(highesttemp)} and wi
 #functions are listed above
 
 
-for key in json_data["DailyForecasts"]:
-    #key == "[DailyForecasts":             #this is a string - good we want to find block line 13 onwards block
-    #print(data["DailyForecasts"])
-    date = (key["Date"])
-    #print(date)
-    mintemp = (key["Temperature"]["Minimum"]["Value"])
-    mintemp_f = convert_f_to_c(mintemp)
-    #converting to celcius
-    maxtemp = (key["Temperature"]["Maximum"]["Value"])
-    maxtemp_f = convert_f_to_c(maxtemp)
-    #converting to celcius
-    
+def print_daily_forecasts(data):
+    result = ""
+    for key in data["DailyForecasts"]:
+        #key == "[DailyForecasts":             #this is a string - good we want to find block line 13 onwards block
+        #print(data["DailyForecasts"])
+        date = (key["Date"])
+        #print(date)
+        mintemp_f = (key["Temperature"]["Minimum"]["Value"])
+        mintemp = convert_f_to_c(mintemp_f)
+        #converting to celcius
+        maxtemp_f = (key["Temperature"]["Maximum"]["Value"])
+        maxtemp = convert_f_to_c(maxtemp_f)
+        #converting to celcius
+        
 
-    #print(mintemp,maxtemp)
-    print(f"--------{convert_date(date)}--------")
-    print(f"Minimum Temperature: {format_temperature(mintemp)}")
-    print(f"Maximum Temperature: {format_temperature(maxtemp)}")
-    
-    day = (key["Day"]["LongPhrase"])
-    print(f"Daytime: {day}")
+        #print(mintemp,maxtemp)
+        result += f"\n-------- {convert_date(date)} --------\n"
+        result += f"Minimum Temperature: {format_temperature(mintemp)}\n"
+        result += f"Maximum Temperature: {format_temperature(maxtemp)}\n"
+        
 
-    rainday = (key["Day"]["RainProbability"])
-    print(f"    Chance of rain: {rainday}%")
+        day = (key["Day"]["LongPhrase"])
+        result += f"Daytime: {day}\n"
 
-    night = (key["Night"]["LongPhrase"])
-    print(f"Nighttime: {night}")
+        rainday = (key["Day"]["RainProbability"])
+        result += f"    Chance of rain:  {rainday}%\n"
 
-    rainnight = (key["Night"]["RainProbability"])
-    print(f"    Chance of rain: {rainnight}%\n")
+        night = (key["Night"]["LongPhrase"])
+        result += f"Nighttime: {night}\n"
 
-    #min(iterable, *[key[mintemp], defult])
-   
-   
-   
-    #mintemp_avg = calculate_mean(mintemp)
-    #print(int(mintemp_avg)
+        rainnight = (key["Night"]["RainProbability"])
+        result += f"    Chance of rain:  {rainnight}%\n"
 
-    #print(process_weather(mintemp))
-    #print(process_weather(maxtemp))
-    #print(f"Minimum Temperature:")
+    return result
 
-    
+def process_weather(forecast_file): #these are a function
+    """Converts raw weather data into meaningful text.
 
-""" Key 1 is headline[0]. Key 2 is daily forecast[1]. 
-There are 5 dictionaries (main items) inside the Daily forecast list. 
-DailyForecast List has 15 keys (incl date, sun, epochDate)
-Date is the first of the 15 keys - therefore position 0: date[0]
-Date is a key with a value
-date [0]
-sun [2]
-temperature [4]
+    Args:
+        forecast_file: A string representing the file path to a file
+            containing raw weather data.
+    Returns:
+        A string containing the processed and formatted weather data.
+    """
 
-"""
+    import json
+    with open(forecast_file) as json_file: 
+        json_data = json.load(json_file)
+
+    lowest_temp, highest_temp = 100, 0
+    lowest_date, highest_date = "", ""
+    high_temps, low_temps = [], []
+
+    days = list(json_data["DailyForecasts"])
+
+    for day in days:
+        current_date = convert_date(day["Date"])
+        if highest_date == "": highest_date = current_date
+        if lowest_date == "": lowest_date = current_date
+
+        min_temp = convert_f_to_c(day["Temperature"]["Minimum"]["Value"])
+        max_temp = convert_f_to_c(day["Temperature"]["Maximum"]["Value"])
+        
+        if min_temp < lowest_temp:
+            lowest_temp = min_temp
+            lowest_date = current_date
+
+        if max_temp > highest_temp:
+            highest_temp = max_temp
+            highest_date = current_date
+        
+        high_temps.append(max_temp)
+        low_temps.append(min_temp)
+
+    result = f"{len(low_temps)} Day Overview\n"
+    result += f"    The lowest temperature will be {format_temperature(lowest_temp)}, and will occur on {lowest_date}.\n"
+    result += f"    The highest temperature will be {format_temperature(highest_temp)}, and will occur on {highest_date}.\n"
+    avg_low = calculate_mean(total=sum(low_temps),num_items=len(low_temps))
+    result += f"    The average low this week is {format_temperature(avg_low)}.\n"
+    avg_high = calculate_mean(total=sum(high_temps),num_items=len(high_temps))
+    result += f"    The average high this week is {format_temperature(avg_high)}.\n"
+
+    result += print_daily_forecasts(json_data)
+
+    return result+"\n"
 
 
+if __name__ == "__main__":
+    # pass
+    print(process_weather('./data/forecast_5days_a.json'))
+    # print_daily_forecasts()
+    # print(process_weather("data/forecast_5days_a.json"))
